@@ -73,12 +73,6 @@
     "notes": "See extern/modp_b64/README.cesium for details."
   },
   {
-    "name": "PicoSHA2",
-    "url": "https://github.com/okdshin/PicoSHA2",
-    "version": "1677374f23352716fc52183255a40c1b8e1d53eb",
-    "license": ["MIT"]
-  },
-  {
     "name": "RapidJSON",
     "url": "https://github.com/Tencent/rapidjson",
     "version": "fcb23c2dbf561ec0798529be4f66394d3e4996d8",
@@ -100,12 +94,6 @@
     "name": "SQLite Amalgamation",
     "url": "https://www.sqlite.org/amalgamation.html",
     "version": "3.34.0",
-    "license": ["Public Domain"]
-  },
-  {
-    "name": "STB",
-    "url": "https://github.com/nothings/stb",
-    "version": "af1a5bc352164740c1cc1354942b1c6b72eacb8a",
     "license": ["Public Domain"]
   },
   {

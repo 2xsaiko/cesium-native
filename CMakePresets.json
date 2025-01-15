@@ -20,6 +20,14 @@
         "CMAKE_BUILD_TYPE": "Release",
         "CESIUM_USE_EZVCPKG": "OFF"
       }
+    },
+    {
+      "name": "system",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CESIUM_USE_EZVCPKG": "OFF"
+      }
     }
   ]
 }

@@ -44,7 +44,7 @@ target_link_libraries(CesiumAsync
         spdlog::spdlog spdlog::spdlog_header_only
         Async++
     PRIVATE
-        unofficial::sqlite3::sqlite3
+        ${CESIUM_SQLITE_DEP}
 )
 
 

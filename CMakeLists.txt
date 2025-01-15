@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 
+option(CESIUM_USE_VCPKG "use vcpkg" ON)
+
+if (CESIUM_USE_VCPKG)
+
 if (NOT VCPKG_LIBRARY_LINKAGE)
     set(VCPKG_LIBRARY_LINKAGE static)
 endif()
@@ -75,7 +79,7 @@ message(STATUS "VCPKG_OVERLAY_TRIPLETS ${VCPKG_OVERLAY_TRIPLETS}")
 # with the installation
 # Note that fmt is a public dependency of the vcpkg version of spdlog
 # STB and uriparser aren't technically part of the public interface, but they're used by the downstream Cesium for Unreal project
-set(PACKAGES_PUBLIC asyncplusplus expected-lite fmt glm rapidjson spdlog stb uriparser)
+set(PACKAGES_PUBLIC asyncplusplus expected-lite fmt glm rapidjson spdlog uriparser)
 # These packages are used in the code and produce binaries, but are not part of the public interface.  Therefore we need
 # to distribute the binaries for linking, but not the headers, as downstream consumers don't need them
 # OpenSSL and abseil are both dependencies of s2geometry
@@ -111,6 +115,8 @@ else()
     message(STATUS "CMAKE_TOOLCHAIN_FILE ${CMAKE_TOOLCHAIN_FILE}")
 endif()
 
+endif() # NOT CESIUM_USE_VCPKG
+
 # Set defaults that should be set BEFORE compiler / IDE detection
 include("cmake/defaults.cmake")
 
@@ -121,6 +127,8 @@ project(cesium-native
 
 include(GNUInstallDirs)
 include(CMakeDependentOption)
+
+if (CESIUM_USE_VCPKG)
 
 set(PACKAGE_BASE_DIR "${EZVCPKG_PACKAGES_DIR}")
 set(PACKAGE_BUILD_DIR "${EZVCPKG_DIR}")
@@ -133,6 +141,7 @@ endif()
 message(STATUS "PACKAGE_BASE_DIR ${PACKAGE_BASE_DIR}")
 message(STATUS "PACKAGE_BUILD_DIR ${PACKAGE_BUILD_DIR}")
 
+endif() # CESIUM_USE_VCPKG
 
 option(CESIUM_INSTALL_STATIC_LIBS "Whether to install the static libraries of cesium-native and its dependencies." ON)
 option(CESIUM_INSTALL_HEADERS "Whether to install the header files of cesium-native and its public dependencies." ON)
@@ -145,6 +154,8 @@ cmake_dependent_option(
     CESIUM_ENABLE_CLANG_TIDY
     OFF
 )
+
+if (CESIUM_USE_VCPKG)
 
 if(CESIUM_INSTALL_STATIC_LIBS OR CESIUM_INSTALL_HEADERS AND EZVCPKG_PACKAGES_DIR)
     foreach(PACKAGE ${PACKAGES_PUBLIC})
@@ -180,6 +191,8 @@ if(CESIUM_INSTALL_STATIC_LIBS AND NOT VCPKG_MANIFEST_MODE)
         endif()
     endforeach()
 endif()
+
+endif() # CESIUM_USE_VCPKG
 
 if(NOT DEFINED CMAKE_C_COMPILER_LAUNCHER AND NOT DEFINED CMAKE_CXX_COMPILER_LAUNCHER)
     find_program(CCACHE_FOUND ccache)
@@ -254,12 +267,16 @@ if (NOT DEFINED GLOB_USE_CONFIGURE_DEPENDS)
     )
 endif()
 
+if (CESIUM_USE_VCPKG)
+
 # On the CI builds, I have to do this explicitly for some reason or it fails to find the vcpkg packages.
 # The toolchain is supposed to manage this, but I haven't figured out why it isn't yet.
 
 list(APPEND CMAKE_PREFIX_PATH "${PACKAGE_BUILD_DIR}/share/s2")
 list(APPEND CMAKE_PREFIX_PATH "${PACKAGE_BUILD_DIR}/share")
 list(APPEND CMAKE_PREFIX_PATH "${PACKAGE_BUILD_DIR}")
+
+endif() # CESIUM_USE_VCPKG
 
 # Find the VCPKG dependnecies
 # Note that while we could push these into the extern/CMakeLists.txt as an organization tidy-up, that would require
@@ -277,23 +294,31 @@ list(APPEND CMAKE_PREFIX_PATH "${PACKAGE_BUILD_DIR}")
 find_package(zlib-ng REQUIRED)
 find_package(modp_b64 REQUIRED)
 
-find_package(Async++ CONFIG REQUIRED)
-find_package(Catch2 CONFIG REQUIRED)
-find_package(draco CONFIG REQUIRED)
-find_package(expected-lite CONFIG REQUIRED)
-find_package(glm CONFIG REQUIRED)
-find_package(meshoptimizer CONFIG REQUIRED)
-find_package(httplib CONFIG REQUIRED)
-find_package(Ktx CONFIG REQUIRED)
-find_package(libmorton CONFIG REQUIRED)
-find_package(libjpeg-turbo CONFIG REQUIRED)
+find_package(Async++ REQUIRED)
+if (CESIUM_TESTS_ENABLED)
+  find_package(Catch2 REQUIRED)
+endif()
+find_package(draco REQUIRED)
+find_package(expected-lite REQUIRED)
+find_package(glm REQUIRED)
+find_package(meshoptimizer REQUIRED)
+find_package(httplib REQUIRED)
+find_package(Ktx REQUIRED)
+find_package(libmorton REQUIRED)
+find_package(libjpeg-turbo REQUIRED)
 find_package(OpenSSL REQUIRED)
-find_package(s2 CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
-find_package(tinyxml2 CONFIG REQUIRED)
-find_package(unofficial-sqlite3 CONFIG REQUIRED)
-find_package(uriparser CONFIG REQUIRED char wchar_t)
-find_package(WebP CONFIG REQUIRED)
+find_package(s2 REQUIRED)
+find_package(spdlog REQUIRED)
+find_package(tinyxml2 REQUIRED)
+if (CESIUM_USE_VCPKG)
+  find_package(unofficial-sqlite3 REQUIRED)
+  set(CESIUM_SQLITE_DEP unofficial::sqlite3::sqlite3)
+else()
+  find_package(SQLite3 REQUIRED)
+  set(CESIUM_SQLITE_DEP SQLite3)
+endif()
+find_package(uriparser REQUIRED char wchar_t)
+find_package(WebP REQUIRED)
 
 
 # Private Library (s2geometry)
@@ -336,10 +361,14 @@ install(EXPORT CesiumExports
   FILE cesium-nativeTargets.cmake
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cesium-native)
 
+if (CESIUM_USE_VCPKG)
+
 install(FILES
   "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/Findzlib-ng.cmake"
-  "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/Findmodp_b64.cmake" 
+  "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/Findmodp_b64.cmake"
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/cesium-native")
+
+endif()
 
 configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/Config.cmake.in
   "${CMAKE_CURRENT_BINARY_DIR}/cesium-nativeConfig.cmake"

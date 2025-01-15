@@ -7,7 +7,6 @@
         "ms-gsl",
         "rapidjson",
         "spdlog",
-        "stb",
         "uriparser",
         "draco",
         "ktx",

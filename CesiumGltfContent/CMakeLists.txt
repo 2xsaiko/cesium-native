@@ -60,4 +60,6 @@ target_link_libraries(CesiumGltfContent
         CesiumGltf
         CesiumGltfReader
         CesiumUtility
+    PRIVATE
+        stb
 )
